@@ -1,0 +1,37 @@
+name: Build NoSignGUI
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Extract source
+        run: |
+          mkdir extracted
+          tar -xf "$(find . -maxdepth 1 -name '*.tar' | head -n 1)" -C extracted
+
+      - name: Build mod
+        run: |
+          PROJECT=$(find extracted -name gradlew -type f | head -n 1)
+          cd "$(dirname "$PROJECT")"
+          chmod +x gradlew
+          ./gradlew --no-daemon build
+
+      - name: Upload JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: NoSignGUI-JAR
+          path: extracted/**/build/libs/*.jar
